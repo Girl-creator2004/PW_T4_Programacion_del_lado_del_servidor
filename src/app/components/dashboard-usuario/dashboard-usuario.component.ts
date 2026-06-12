@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common'; // <--- ESTO ES LO QUE FALTABA
+import { CommonModule } from '@angular/common'; 
 import { Router, RouterLink } from '@angular/router';
 import { PublicacionesService } from '../../services/publicaciones.service';
 import { SupabaseService } from '../../services/supabase.service';
@@ -8,12 +8,15 @@ import { Publicacion } from '../../interfaces/database.interface';
 @Component({
   selector: 'app-dashboard-usuario',
   standalone: true,
-  imports: [CommonModule, RouterLink], // <--- AGREGADO AQUÍ
+  imports: [CommonModule, RouterLink], 
   templateUrl: './dashboard-usuario.component.html',
   styleUrls: ['./dashboard-usuario.component.css']
 })
 export class DashboardUsuarioComponent implements OnInit {
   idPublicacionEnEdicion = signal<number | null>(null);
+  
+  // --- VARIABLES PARA VISTA PREVIA ---
+  imagenSeleccionada: string | null = null;
 
   constructor(
     public pubService: PublicacionesService,
@@ -22,13 +25,21 @@ export class DashboardUsuarioComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Estas llamadas disparan la carga de datos desde Supabase
     this.pubService.cargarPublicacionesAceptadas();
     
     const userId = this.supabaseService.currentUser()?.id;
     if (userId) {
       this.pubService.cargarMisPublicaciones(userId);
     }
+  }
+
+  // --- MÉTODOS PARA VISTA PREVIA ---
+  abrirVistaPrevia(url: string) {
+    this.imagenSeleccionada = url;
+  }
+
+  cerrarVistaPrevia() {
+    this.imagenSeleccionada = null;
   }
 
   async cerrarSesion() {
@@ -55,7 +66,6 @@ export class DashboardUsuarioComponent implements OnInit {
   async eliminar(id: number) {
     if (confirm('¿Estás seguro de que deseas borrar permanentemente esta publicación?')) {
       await this.pubService.eliminarPublicacion(id);
-      // Recargamos los datos para que desaparezca de la vista
       this.pubService.cargarPublicacionesAceptadas();
       const userId = this.supabaseService.currentUser()?.id;
       if (userId) this.pubService.cargarMisPublicaciones(userId);
